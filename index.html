@@ -32,7 +32,7 @@
 .reveal .rn{display:flex;flex-direction:column;min-width:0}
 .reveal .rn b{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:1.5rem;line-height:1}
 .reveal .rn small{color:var(--ink-2);font-size:.9rem}
-.reveal .pts{margin-left:auto;font-family:var(--mono);font-size:.85rem;white-space:nowrap}
+.reveal .rpts{margin-left:auto;font-family:var(--mono);font-size:.85rem;white-space:nowrap}
 .streak{display:flex;gap:16px;font-size:.95rem;color:var(--ink-2)}
 .streak b{font-family:var(--display);font-weight:900;font-size:1.3rem;color:var(--ink);margin-right:4px}
 .board9~.silbox{max-width:250px}
@@ -50,7 +50,11 @@
 .dtabs{width:100%}
 .modes{max-width:320px;width:100%;align-self:center}
 .difftag{font-family:var(--mono);font-size:.75rem;color:var(--sea);letter-spacing:.04em;text-transform:uppercase}
-.soon{opacity:.55;box-shadow:none}
+.osel{width:100%;border:1.5px solid var(--ink);border-radius:5px;padding:10px;font-size:1rem;background:var(--paper)}
+.rank td:first-child,.rank th:first-child{width:28px}
+.rank td:nth-child(2),.rank th:nth-child(2){text-align:left;font-family:var(--ui);font-weight:600}
+.rank tr.me td{background:var(--sea-soft)}
+.ready{display:flex}
 @media (prefers-reduced-motion:no-preference){.silbox.pop{animation:pop .35s cubic-bezier(.3,1.6,.6,1)}}
 </style>
 </head>
@@ -63,6 +67,10 @@
 <script src="silhouette.js?v=202610230100"></script>
 <script src="games.js?v=202610230100"></script>
 <script src="minigames.js?v=202610230100"></script>
+<!-- online rooms (With friends): Firebase, loaded after the page so today's board shows at once -->
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script defer src="firebase-config.js?v=202610230100"></script>
 <!-- flags appear once a shape is answered; loaded after the page so the game shows at once -->
 <script defer src="flags.js?v=202610230100"></script>
 <script>
@@ -88,7 +96,7 @@ function suggHTML(q){if(!query)return '';const res=searchCountries(query,null,6)
 function answerBoxHTML(q,extra){
   return `<div class="ans"><input id="q" placeholder="Type a country…" autocomplete="off" autocapitalize="words" spellcheck="false" value="${esc(query)}" aria-label="Type a country"><ul class="sugg" id="sugg">${suggHTML(q)}</ul></div>${extra||''}`}
 function revealHTML(q,note){const c=byCode[q.c],ok=q.st==='right';
-  return `<div class="reveal ${ok?'':'wrong'}"><img class="flag" src="${flagSrc(q.c)}" alt=""><span class="rn"><b>${esc(c.n)}</b><small>${ok?(q.tries.length?'Right, at try '+(q.tries.length+1):'Right, first try'):'The answer'} · ${contName[c.r]||''}</small></span>${note?`<span class="pts">${note}</span>`:''}</div>`}
+  return `<div class="reveal ${ok?'':'wrong'}"><img class="flag" src="${flagSrc(q.c)}" alt=""><span class="rn"><b>${esc(c.n)}</b><small>${ok?(q.tries.length?'Right, at try '+(q.tries.length+1):'Right, first try'):'The answer'} · ${contName[c.r]||''}</small></span>${note?`<span class="rpts">${note}</span>`:''}</div>`}
 function silBoxHTML(q,big){const cls=q.st==='right'?'right':q.st==='wrong'?'wrong':'';
   return `<div class="silbox ${cls}${big?' pop':''}">${silSVG(q.c,q.rot)}</div>`}
 // the answer box: typing filters the list; a tap or Enter (first match) answers
@@ -202,12 +210,225 @@ function rulesHTML(){return `<h3>The idea</h3><ul>
   <h3>Modes</h3><ul>
   <li><b>Today's shapes</b>: nine shapes on a 3 × 3 board, the same for everyone, one board per level, new every day at midnight CET. One try each, saved on this device.</li>
   <li><b>Training</b>: unlimited shapes at the level you choose. No country comes back until you have seen them all.</li>
-  <li><b>With friends</b>: online rooms, coming soon.</li></ul>`}
+  <li><b>With friends</b>: online rooms for 2 to 6 phones. The host chooses <b>Getting harder</b> (3 Easy, 4 Normal, 3 Hard) or a continent and a level. Everyone gets the same ten shapes at the same time, ${SECS} seconds each. A right answer scores 500 points plus up to 500 for speed. The ranking shows after every shape and at the end.</li></ul>`}
 function creditsHTML(){return `<ul class="helpbox" style="padding-left:18px">
   <li>Borders: <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>, from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> 1:10m (public domain). Each country is drawn on its own map centred on itself, so no shape is stretched or cut by the date line.</li>
   <li>Country names, other names and continents: Country Grid's data, from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL 1.0).</li>
   <li>Flags: <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener">flag-icons</a> (MIT License).</li>
   <li>Fonts: Big Shoulders Display, Barlow Semi Condensed, JetBrains Mono (Google Fonts, SIL Open Font License).</li></ul>`}
+
+/* ---- With friends: online rooms on Country Grid's Firebase Realtime Database ----
+   A room lives at rooms/ABCD like Country Grid's, marked game:'silhouette' so games never open each other's rooms.
+   Everyone sees the same shape at the same time (the host deals all of them at the start, in qs); each round lasts
+   SECS seconds and ends early once everyone has named it or used their tries. A right answer scores 500, plus up to
+   500 for speed. Each phone writes only its own answer (ans/<round>/<player>); whoever is online moves the room on. */
+const FB_OK=()=>typeof firebase!=='undefined'&&typeof firebase.database==='function'&&!!(window.FIREBASE_CONFIG&&/^https:\/\//.test(FIREBASE_CONFIG.databaseURL||''));
+const ROOM_V='sil-202610230100',MAXP=6,ROUNDS=10,SECS=20,READY_MS=3000,REVEAL_MS=6000;
+const CONTS=[['all','The whole world'],['EU','Europe'],['AS','Asia'],['AF','Africa'],['NA','North and Central America'],['SA','South America'],['OC','Oceania']];
+let db=null,room=null,roomRef=null,roomCode=null,joining=false,offset=0,tick=null,O=null;
+const now=()=>Date.now()+offset;
+let ME=load('sil-pid','');if(!ME){ME='p'+Math.random().toString(36).slice(2,10);store('sil-pid',ME)}
+// the name the others see: the one typed here before, or the one used in the other games' rooms on this device
+const setup={fname:'',fmt:'ramp',cont:'all',diff:'normal',join:'',...load('sil-setup',{})};
+if(!setup.fname)try{setup.fname=(JSON.parse(localStorage.getItem('t10-setup')||'{}')||{}).fname||(JSON.parse(localStorage.getItem('bl-setup')||'{}')||{}).fname||localStorage.getItem('bl-user')||''}catch(e){}
+function initFB(){if(db)return true;if(!FB_OK())return false;
+  try{if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database();db.ref('.info/serverTimeOffset').on('value',s=>{offset=s.val()||0})}catch(e){console.error(e);return false}
+  return true}
+const TS=()=>firebase.database.ServerValue.TIMESTAMP;
+const LET='ABCDEFGHJKLMNPQRSTUVWXYZ',randRoom=()=>[...Array(4)].map(()=>LET[Math.floor(Math.random()*LET.length)]).join('');
+const pinStyle=i=>`background:var(--p${i%6})`;
+const lobbyOrder=r=>Object.entries(r.players||{}).sort((a,b)=>(a[1].t||0)-(b[1].t||0)).map(x=>x[0]);
+function saveSetup(){const el=$('fname');if(el)setup.fname=el.value.trim().slice(0,16);store('sil-setup',{fname:setup.fname,fmt:setup.fmt,cont:setup.cont,diff:setup.diff})}
+function needName(){saveSetup();if(setup.fname)return false;
+  toast("Type your name so your friends know who's playing.",'bad');const el=$('fname');if(el)el.focus();return true}
+const cfgText=c=>c.fmt==='ramp'?'10 rounds, getting harder: 3 Easy, 4 Normal, 3 Hard':`10 rounds · ${CONTS.find(x=>x[0]===c.cont)[1]} · ${DIFF_NAME[c.diff]}`;
+// the ten shapes of a game. Getting harder: three Easy, then four Normal countries not in the Easy list, then three turned.
+// Chosen continent and level: from that continent; when Easy has fewer than ten there, the rest of the continent fills in.
+function dealShapes(cfg){const pick=(pool,n,not)=>shuffled(pool.map(c=>c.c).filter(c=>!not.includes(c)),Math.random).slice(0,n);
+  if(cfg.fmt==='ramp'){const a=pick(poolOf('easy'),3,[]),b=pick(poolOf('normal').filter(c=>!c.e),4,a),h=pick(poolOf('normal'),3,[...a,...b]);
+    return [...a.map(c=>({c,rot:0,d:'easy'})),...b.map(c=>({c,rot:0,d:'normal'})),...h.map(c=>({c,rot:hardTurn(Math.random),d:'hard'}))]}
+  let codes=pick(poolOf(cfg.diff,cfg.cont),ROUNDS,[]);
+  if(codes.length<ROUNDS)codes=[...codes,...pick(poolOf('normal',cfg.cont),ROUNDS-codes.length,codes)];
+  return codes.map(c=>({c,rot:cfg.diff==='hard'?hardTurn(Math.random):0,d:cfg.diff}))}
+async function createRoom(){
+  if(needName())return;
+  if(!initFB()){toast('Online play is not available right now. Check the connection and reload.','bad');return}
+  try{let code='';
+    for(let i=0;i<8;i++){code=randRoom();const ex=await db.ref('rooms/'+code).get();if(!ex.exists())break}
+    await db.ref('rooms/'+code).set({game:'silhouette',v:ROOM_V,host:ME,created:TS(),cfg:{fmt:setup.fmt,cont:setup.cont,diff:setup.diff},status:'lobby',
+      players:{[ME]:{name:setup.fname,t:TS(),on:true}}});
+    listenRoom(code)}catch(e){console.error(e);toast('Could not create the room. Check the connection and try again.','bad')}}
+async function joinRoom(raw){
+  const code=(raw||'').toUpperCase().replace(/[^A-Z]/g,'');
+  if(code.length!==4){toast('Room codes have 4 letters.','bad');return}
+  if(needName())return;
+  if(!initFB()){toast('Online play is not available right now. Check the connection and reload.','bad');return}
+  if(joining)return;joining=true;
+  try{let why='';
+    const res=await db.ref('rooms/'+code).transaction(r=>{
+      if(!r)return r;
+      if(r.game!=='silhouette'){why='other';return}
+      if(r.v!==ROOM_V){why='version';return}
+      r.players=r.players||{};
+      if(r.players[ME]){r.players[ME].name=setup.fname;r.players[ME].on=true;return r}
+      if(r.status!=='lobby'){why='started';return}
+      if(Object.keys(r.players).length>=MAXP){why='full';return}
+      r.players[ME]={name:setup.fname,t:now(),on:true};return r});
+    const val=res.snapshot.val();
+    if(!val){toast('No room called '+code+'. Check the code.','bad');return}
+    if(!res.committed||!val.players||!val.players[ME]){
+      toast(why==='other'?code+' is a room of another game. Open that game to join it.':why==='version'?'You and the host have different versions of the game. Both of you reload the page, then try again.':why==='full'?'Room '+code+' already has '+MAXP+' players.':why==='started'?'That game has already started. Ask the host for a rematch.':'Could not join '+code+'.','bad');return}
+    listenRoom(code)}catch(e){console.error(e);toast('Could not join. Check the connection and try again.','bad')}
+  finally{joining=false}}
+function listenRoom(code){
+  if(roomRef)roomRef.off();
+  roomCode=code;roomRef=db.ref('rooms/'+code);view='friends';setup.join='';
+  try{localStorage.setItem('sil-room',code)}catch(e){}
+  try{const u=new URL(location.href);if(u.searchParams.has('room')){u.searchParams.delete('room');history.replaceState(null,'',u.pathname+u.search)}}catch(e){}
+  const me=roomRef.child('players/'+ME+'/on');me.onDisconnect().set(false);
+  db.ref('.info/connected').on('value',s=>{if(s.val()&&roomCode===code){me.onDisconnect().set(false);roomRef.child('players/'+ME).once('value',p=>{if(p.exists())me.set(true)})}});
+  roomRef.on('value',snap=>{const r=snap.val();
+    if(!r||!r.players||!r.players[ME]){const was=roomCode;dropRoom();
+      if(was)toast(r?'You are no longer in room '+was+'.':'Room '+was+' was closed.','bad');render();return}
+    room=r;syncRoom()})}
+function dropRoom(){
+  if(roomRef){roomRef.off();try{roomRef.child('players/'+ME+'/on').onDisconnect().cancel()}catch(e){}}
+  room=null;roomRef=null;roomCode=null;O=null;clearInterval(tick);
+  try{localStorage.removeItem('sil-room')}catch(e){}}
+async function leaveRoom(){const ref=roomRef;
+  if(ref&&room&&room.status==='lobby'){
+    try{await ref.transaction(r=>{if(!r)return r;if(r.players)delete r.players[ME];
+      const left=lobbyOrder(r);if(!left.length)return null;if(r.host===ME)r.host=left[0];return r})}catch(e){}}
+  else if(ref){try{await ref.child('players/'+ME+'/on').set(false)}catch(e){}}
+  dropRoom();view='friends';render()}
+// everyone in the game who is still online has named the shape or used their tries
+const doneOf=a=>!!a&&(a.ok||(a.tries||[]).length>=TRIES);
+function allDone(r){const ans=(r.ans||{})[r.round]||{};
+  return (r.order||[]).filter(pid=>(r.players[pid]||{}).on!==false).every(pid=>doneOf(ans[pid]))}
+// the room as a game state, rebuilt on every change
+function syncRoom(){const r=room;const prev=O;
+  if(r.status==='lobby'||!r.qs){O=null;clearInterval(tick);render();return}
+  const order=r.order||lobbyOrder(r),ans=r.ans||{};
+  const players=order.map((pid,i)=>{const p=r.players[pid]||{};let total=0;
+    for(let k=0;k<r.qs.length;k++){const a=(ans[k]||{})[pid];if(a&&a.ok&&(k<r.round||r.status!=='round'||k!==r.round))total+=a.pts||0}
+    const cur=(ans[r.round]||{})[pid]||{};
+    return {pid,i,name:p.name||'Gone',on:p.on!==false,total,cur}});
+  const q=r.qs[r.round],mine=(ans[r.round]||{})[ME]||{};
+  O={round:r.round,status:r.status,q:{c:q.c,rot:q.rot,d:q.d,tries:mine.tries||[],st:mine.ok?'right':(mine.tries||[]).length>=TRIES?'wrong':'play'},mine,
+     players,me:order.indexOf(ME),host:r.host===ME,start:r.start,end:r.end,revealEnd:r.revealEnd,n:r.qs.length,cfg:r.cfg};
+  if(!prev||prev.round!==O.round||prev.status!==O.status){query='';typing=O.status==='round'&&!TOUCH}
+  clearInterval(tick);if(O.status==='round'||O.status==='reveal')tick=setInterval(onTick,250);
+  // when only the others moved (an answer, someone going offline), redraw just their chips, so the answer box keeps its focus
+  O.key=[O.status,O.round,JSON.stringify(O.mine),r.host].join('|');
+  if(prev&&prev.key===O.key&&$('ochips')){$('ochips').innerHTML=chipsHTML();return}
+  render()}
+// a right answer: 500 points, plus up to 500 for speed (all of it when instant, none at the last second)
+const pointsFor=ms=>500+Math.round(500*Math.max(0,1-ms/(SECS*1000)));
+async function onlinePick(code){if(!O||O.status!=='round'||O.q.st!=='play')return;
+  const t=now();if(t<O.start)return;
+  if(t>O.end){toast("Time's up.",'bad');return}
+  const right=code===O.q.c,ms=t-O.start,pts=pointsFor(ms),round=O.round;let res='wrong';
+  try{const r=await roomRef.child('ans/'+round+'/'+ME).transaction(a=>{a=a||{tries:[]};a.tries=a.tries||[];
+      if(a.ok||a.tries.length>=TRIES)return;
+      if(right){a.ok=true;a.ms=ms;a.pts=pts}else a.tries.push(code);return a});
+    if(!r.committed)return;
+    const a=r.snapshot.val();res=right?'right':(a.tries||[]).length>=TRIES?'out':'wrong';
+    query='';typing=res==='wrong';
+    if(res==='right')toast(`${byCode[code].n}! +${pts}`,'good');
+    else toast(`Not ${byCode[code].n}.${res==='out'?' No tries left.':` ${TRIES-a.tries.length} ${TRIES-a.tries.length===1?'try':'tries'} left.`}`,'bad');
+    if(res!=='wrong')moveOn()}
+  catch(e){console.error(e);toast('That answer did not go through. Check the connection.','bad')}}
+// moves the room on when it is time: the round ends (all done or time up), the answer has been shown long enough
+async function moveOn(){if(!roomRef||moveOn.busy)return;moveOn.busy=true;
+  try{await roomRef.transaction(r=>{if(!r)return r;const t=now();
+    if(r.status==='round'&&(t>=r.end||allDone(r))){r.status='reveal';r.revealEnd=t+REVEAL_MS;return r}
+    if(r.status==='reveal'&&t>=r.revealEnd){
+      if(r.round+1<r.qs.length){r.round++;r.status='round';r.start=t+READY_MS;r.end=r.start+SECS*1000}else{r.status='over'}
+      return r}
+    return})}catch(e){}
+  moveOn.busy=false}
+function onTick(){if(!O){clearInterval(tick);return}const t=now();
+  if(O.status==='round'){const left=O.end-t,bar=document.querySelector('.tbar'),sub=$('tleft'),wait=O.start-t;
+    if(wait>0){if(sub)sub.textContent='Get ready… '+Math.ceil(wait/1000)}
+    else{if(document.querySelector('.ready'))render();
+      if(bar)bar.style.width=Math.max(0,left/(SECS*1000)*100)+'%';if(sub)sub.textContent=Math.max(0,Math.ceil(left/1000))+' s'}
+    // the host moves the room on; if the host has gone, anyone does, a little later
+    if(left<=(O.host?0:-2500))moveOn()}
+  else if(O.status==='reveal'){const left=O.revealEnd-t,sub=$('tleft');if(sub)sub.textContent='Next shape in '+Math.max(0,Math.ceil(left/1000))+' s';
+    if(left<=(O.host?0:-2500))moveOn()}}
+async function onlineAct(kind){
+  try{await roomRef.transaction(r=>{
+    if(!r)return r;
+    if(kind==='cfg'){if(r.host!==ME||r.status!=='lobby')return;r.cfg={fmt:setup.fmt,cont:setup.cont,diff:setup.diff};return r}
+    if(kind==='start'||kind==='rematch'){if(r.host!==ME)return;
+      const order=(kind==='start'?lobbyOrder(r):(r.order||lobbyOrder(r))).filter(pid=>r.players[pid]&&(kind==='start'||r.players[pid].on!==false));
+      if(order.length<2)return;
+      r.order=order;r.v=ROOM_V;r.qs=dealShapes(r.cfg);r.ans=null;r.round=0;r.status='round';r.start=now()+READY_MS;r.end=r.start+SECS*1000;r.revealEnd=0;return r}
+    if(kind==='end'){if(r.host!==ME||r.status==='lobby')return;r.status='over';return r}
+    if(kind==='lobby'){if(r.host!==ME)return;r.status='lobby';r.order=null;r.qs=null;r.ans=null;r.round=0;return r}
+  })}catch(e){console.error(e);toast('That did not go through. Check the connection.','bad')}}
+const ranked=()=>[...O.players].sort((a,b)=>b.total-a.total||a.i-b.i);
+function friendsHTML(){
+  return header('Silhou<span>ette</span>','')+`<section class="panel">
+    <div class="backline"><button class="linkbtn" id="home">← Back</button><span class="ht">With friends</span></div>
+    <p class="hint">2 to ${MAXP} players, each on their own phone. The host creates a room and shares its link or code.</p>
+    <div class="field"><label class="label" for="fname">Your name in the room</label><input id="fname" maxlength="16" autocomplete="nickname" placeholder="Your name" value="${esc(setup.fname||'')}"></div>
+    <div class="field">${FB_OK()?'':'<p class="hint">Online play needs a connection: reload the page when you are online.</p>'}<button class="primary" id="create" ${FB_OK()?'':'disabled style="opacity:.5"'}>Create room</button></div>
+    <div class="field"><label class="label" for="jcode">Join a friend's room</label><div class="joinrow"><input class="code-in" id="jcode" placeholder="ABCD" maxlength="4" value="${esc(setup.join||'')}" autocomplete="off"><button class="ghost" id="join" ${FB_OK()?'':'disabled'}>Join</button></div></div>
+  </section>
+  <section class="panel qrules"><span class="label">Quick rules</span><p class="hint">Everyone gets the same shape at the same time, ${SECS} seconds each, ${TRIES} tries. A right answer scores 500 points plus up to 500 for speed: the sooner, the more. Ten shapes, most points wins.</p></section>`}
+function lobbyHTML(){const r=room,order=lobbyOrder(r),link=pageLink('?room='+roomCode),host=r.host===ME;
+  const c=host?setup:r.cfg;
+  return header('Silhou<span>ette</span>','room '+roomCode)+`<section class="panel namecard"><span class="label">Room code</span><p class="roomcode">${roomCode}</p>
+    <p class="hint">Friends open Silhouette, choose <b>With friends</b>, then type this code under Join. Or send them the link:</p>
+    <pre class="sharebox" id="linkbox">${esc(link)}</pre><button class="ghost" id="copylink">Copy link</button>
+    <span class="label">Players ${order.length}/${MAXP}</span>
+    <div class="players">${order.map((pid,i)=>{const p=r.players[pid];return `<div class="lp ${p.on===false?'off':''}"><span class="pin" style="${pinStyle(i)}"></span>${esc(p.name)}<span class="tag">${[pid===r.host?'host':'',pid===ME?'you':'',p.on===false?'offline':''].filter(Boolean).join(' · ')}</span></div>`}).join('')}</div>
+    <span class="label">Game</span>
+    ${host?`<div class="field">${seg('fmt',[['ramp','Getting harder'],['pick','Choose']],c.fmt)}
+      ${c.fmt==='pick'?`<label class="label" for="ocont">Continent</label><select id="ocont" class="osel">${CONTS.map(([v,l])=>`<option value="${v}"${v===c.cont?' selected':''}>${l}</option>`).join('')}</select>
+      ${seg('odiff',[['easy','Easy'],['normal','Normal'],['hard','Hard']],c.diff)}`:''}</div>`:''}
+    <p class="hint">${esc(cfgText(r.cfg))} · ${SECS} s per shape</p>
+    ${host?`<button class="primary" id="ostart" ${order.length<2?'disabled style="opacity:.5"':''}>${order.length<2?'Waiting for players…':'Start game'}</button>`:'<p class="hint">Waiting for the host to start the game.</p>'}
+    <button class="ghost" id="leave">Leave room</button></section>`}
+function boardRowsHTML(roundPts){const me=ME;
+  return `<table class="sttab rank"><tr><th>#</th><th>Player</th>${roundPts?'<th>Shape</th>':''}<th>Total</th></tr>${ranked().map((p,k)=>`<tr class="${p.pid===me?'me':''}"><td>${k+1}</td><td><span class="pin" style="${pinStyle(p.i)}"></span> ${esc(p.name)}${p.on?'':' <span class="tag">offline</span>'}</td>${roundPts?`<td>${p.cur.ok?'+'+p.cur.pts:p.cur.tries&&p.cur.tries.length?'✗':'–'}</td>`:''}<td>${p.total}</td></tr>`).join('')}</table>`}
+// a chip per player: total so far, a tick once they are done with this shape
+const chipsHTML=()=>O.players.map(p=>`<span class="chip ${doneOf(p.cur)?'on':''} ${p.on?'':'off'}"><span class="pin" style="${pinStyle(p.i)}"></span>${esc(p.name)} <b>${p.total}</b>${doneOf(p.cur)?' ✓':''}</span>`).join('');
+function onlineHTML(){const q=O.q,t=now(),ready=O.status==='round'&&t<O.start;
+  let h=header('Silhou<span>ette</span>','room '+roomCode);
+  if(O.status==='over'){const rk=ranked(),best=rk[0],tie=rk.length>1&&rk[1].total===best.total;
+    h+=`<section class="panel"><span class="label">Room ${roomCode} · final ranking</span><p class="big">${tie?"It's a tie":esc(best.name)+' wins'}</p>${boardRowsHTML(false)}
+      ${O.host?`<div class="row-btns"><button class="primary" id="orematch" style="flex:1">Rematch</button><button class="ghost" id="olobby" style="flex:1">Back to room</button></div>`:'<p class="hint">Waiting for the host to start a rematch.</p>'}</section>
+      <div class="row-btns"><button class="ghost" id="leave" style="flex:1">Leave room</button></div>`;return h}
+  h+=`<div class="status"><span class="who">Shape ${O.round+1} of ${O.n}</span><span class="difftag">${DIFF_NAME[q.d]||''}</span><span class="sub" id="tleft">${ready?'Get ready…':O.status==='reveal'?'':Math.max(0,Math.ceil((O.end-t)/1000))+' s'}</span>${O.status==='round'&&!ready?'<span class="tbar" style="width:100%"></span>':''}</div>`;
+  h+=`<div class="scores" id="ochips">${chipsHTML()}</div>`;
+  h+=`<section class="panel play">`;
+  if(ready)h+=`<div class="silbox ready"><p class="big" style="margin:auto;text-align:center;align-self:center">Get ready</p></div>`;
+  else if(O.status==='reveal'){h+=silBoxHTML({...q,st:q.st==='right'?'right':'wrong'})+revealHTML({...q,st:q.st==='right'?'right':'wrong'},q.st==='right'?'+'+O.mine.pts:'')+`<span class="label">After shape ${O.round+1}</span>`+boardRowsHTML(true)}
+  else{h+=silBoxHTML(q);
+    if(q.st==='play')h+=triesHTML(q)+answerBoxHTML(q);
+    else h+=`<p class="hint">${q.st==='right'?`Right: <b>+${O.mine.pts}</b>.`:'No tries left.'} Waiting for the others…</p>`}
+  h+=`</section><div class="row-btns">${O.host?'<button class="ghost" id="oend" style="flex:1">End game</button>':''}<button class="ghost" id="leave" style="flex:1">Leave room</button></div>`;
+  return h}
+function bindOnline(){
+  if($('fname'))$('fname').onchange=saveSetup;
+  if($('jcode'))$('jcode').oninput=e=>{setup.join=e.target.value};
+  if($('create'))$('create').onclick=createRoom;
+  if($('join'))$('join').onclick=()=>joinRoom($('jcode').value);
+  if($('jcode'))$('jcode').onkeydown=e=>{if(e.key==='Enter')joinRoom(e.target.value)};
+  if($('copylink'))$('copylink').onclick=()=>{const t=pageLink('?room='+roomCode);
+    if(navigator.share&&TOUCH){navigator.share({text:'Play Silhouette with me: '+t}).catch(()=>{});return}
+    try{navigator.clipboard.writeText(t).then(()=>toast('Link copied.','good'),()=>toast('Copy the link above.'))}catch(e){toast('Copy the link above.')}};
+  app.querySelectorAll('[data-seg="fmt"]').forEach(b=>b.onclick=()=>{setup.fmt=b.dataset.v;saveSetup();onlineAct('cfg')});
+  app.querySelectorAll('[data-seg="odiff"]').forEach(b=>b.onclick=()=>{setup.diff=b.dataset.v;saveSetup();onlineAct('cfg')});
+  if($('ocont'))$('ocont').onchange=e=>{setup.cont=e.target.value;saveSetup();onlineAct('cfg')};
+  if($('leave'))$('leave').onclick=()=>{if(O&&O.status!=='over'&&!confirm('Leave the room? The game goes on without you.'))return;leaveRoom()};
+  if($('ostart'))$('ostart').onclick=()=>onlineAct('start');
+  if($('orematch'))$('orematch').onclick=()=>onlineAct('rematch');
+  if($('olobby'))$('olobby').onclick=()=>onlineAct('lobby');
+  if($('oend'))$('oend').onclick=()=>{if(confirm('End the game for everyone?'))onlineAct('end')};
+  if(O&&O.status==='round'&&O.q.st==='play'&&now()>=O.start)bindAnswer(O.q,onlinePick)}
 
 /* ---- home: today's board open and playable on top, then Training and With friends, as in the other games ---- */
 let view='home';
@@ -221,17 +442,22 @@ function homeHTML(){const key=todayKey(),diff=load('sil-ddiff','normal');
   else daily=`<div class="hcard ac play"><span class="hm">#${D.num} · ${dateLabel(key)}</span><span class="ht">Today's shapes</span><span class="hs">${D.qs.some(q=>q.st!=='play')?'You started it: keep going.':'Nine countries, the same for everyone. Tap a shape or type to start.'}</span>${dailyPlayHTML(D)}</div>`;
   return header('Silhou<span>ette</span>','',true)+`<section class="home">${dailyTabs(D.diff)}${daily}
     <div class="hrow"><button class="hcard" data-go="train"><span class="ht">Training</span><span class="hs">Unlimited shapes, at the level you choose.</span></button>
-    <div class="hcard soon" aria-disabled="true"><span class="ht">With friends</span><span class="hs">Play online, 2 to 6 players.</span><span class="hm">(coming soon)</span></div></div></section>
+    <button class="hcard" data-go="friends"><span class="ht">With friends</span><span class="hs">Play online, 2 to 6 players, each on their own phone.</span></button></div></section>
     ${quickRules(' Full rules in <b>How to play</b>.')}`}
-function goHome(){view='home';toastMsg=null;drawToast();query='';typing=false;render();window.scrollTo(0,0)}
+function goHome(){if(roomCode){if(!confirm('Leave the room and go to the home screen?'))return;leaveRoom().then(()=>{view='home';render()});return}
+  view='home';toastMsg=null;drawToast();query='';typing=false;render();window.scrollTo(0,0)}
 function render(){
-  if(view==='train')app.innerHTML=trainHTML();
+  if(roomCode&&room)app.innerHTML=O?onlineHTML():lobbyHTML();
+  else if(view==='friends')app.innerHTML=friendsHTML();
+  else if(view==='train')app.innerHTML=trainHTML();
   else if(view==='daily')app.innerHTML=dailyHTML();
   else app.innerHTML=homeHTML();
   bind()}
 function bind(){
   if($('home'))$('home').onclick=goHome;
   app.querySelectorAll('[data-go="train"]').forEach(b=>b.onclick=openTrain);
+  app.querySelectorAll('[data-go="friends"]').forEach(b=>b.onclick=()=>{view='friends';render();window.scrollTo(0,0)});
+  if(roomCode||view==='friends'){bindOnline();return}
   if($('daily'))$('daily').onclick=()=>openDaily();
   if($('copy'))$('copy').onclick=()=>share(dailyShare(D));
   app.querySelectorAll('[data-dd]').forEach(b=>b.onclick=()=>openDaily(b.dataset.dd));
@@ -252,7 +478,16 @@ function bind(){
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&view==='train'&&T&&T.q.st!=='play'&&!$('dok')&&e.target.id!=='q'&&document.activeElement!==$('tnext')){e.preventDefault();trainNext();typing=true;render()}});
 // once the flags have loaded, show the one of a revealed shape
 window.addEventListener('load',()=>{if(document.querySelector('.reveal .flag'))render()},{once:true});
-render();
+/* ---- start: today's board on the home screen; ?room=ABCD opens a friend's room ---- */
+(()=>{const rm=(TESTQ.get('room')||'').toUpperCase();if(/^[A-Z]{4}$/.test(rm)){view='friends';setup.join=rm}render()})();
+// back in a room after a reload (the online scripts load after the page)
+window.addEventListener('DOMContentLoaded',()=>{let code='';try{code=localStorage.getItem('sil-room')||''}catch(e){}
+  if(view==='friends')render(); // the Create and Join buttons were drawn before Firebase loaded
+  if(!code||!initFB())return;
+  db.ref('rooms/'+code).once('value').then(s=>{const r=s.val();
+    if(r&&r.game==='silhouette'&&r.players&&r.players[ME]&&!roomCode)listenRoom(code);else try{localStorage.removeItem('sil-room')}catch(e){}}).catch(()=>{})});
+// a new day while the page was in the background: today's new board
+document.addEventListener('visibilitychange',()=>{if(document.hidden||roomCode)return;if(view==='home'||view==='daily'&&D&&D.date!==todayKey()){D=null;if(view==='daily')openDaily();else render()}});
 </script>
 </body>
 </html>
