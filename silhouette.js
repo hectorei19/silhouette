@@ -1,6 +1,10 @@
 // Silhouette helpers: drawing a country's shape, the answer box's search, and seeded random picks.
 // Needs countries.js (COUNTRIES) loaded first.
 
+// the day changes at midnight in Spain, for everyone (as in the other games)
+const madrid = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+function madridParts(t) { const o = {}; madrid.formatToParts(new Date(t)).forEach(p => o[p.type] = p.value); return o; }
+
 const byCode = Object.fromEntries(COUNTRIES.map(c => [c.c, c]));
 // country names compared without accents, case, spaces or punctuation ("Côte d'Ivoire" = "cotedivoire")
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
