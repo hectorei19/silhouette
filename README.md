@@ -1,6 +1,6 @@
 # Silhouette
 
-Geography quiz: name the country from its shape. Part of [Geomingo](https://hectorei19.github.io/geo-games/), daily geography games, each its own website: [Countries](https://hectorei19.github.io/country-grid/), [Connections](https://hectorei19.github.io/connections/), [Top 10](https://hectorei19.github.io/top10/) and [all the games](https://hectorei19.github.io/geo-games/).
+Geography quiz: name the country from its shape. Part of [Geomingo](https://hectorei19.github.io/geo-games/), daily geography games, each its own website: [Countries](https://hectorei19.github.io/country-grid/), [Cities](https://hectorei19.github.io/city-grid/), [Connections](https://hectorei19.github.io/connections/), [Top 10](https://hectorei19.github.io/top10/) and [all the games](https://hectorei19.github.io/geo-games/).
 
 - Three levels: Easy (54 well-known countries), Normal (all 196) and Hard (all 196, each shape turned by a random angle). 3 tries per shape.
 - Today's shapes: a 3 × 3 board of nine shapes per level, the same for everyone, new at midnight CET, one try, open on the home screen. Each level's countries are shuffled once per cycle (from the cycle number) and dealt nine a day, so none comes back within a cycle (Easy every 6 days, Normal and Hard every 21). Hard turns come from the date. `?test&day=2026-11-20` plays that day's boards without saving.
