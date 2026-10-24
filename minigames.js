@@ -58,7 +58,7 @@ function drawMenu(open){let box=$('menulayer');
   box.querySelectorAll('[data-menu]').forEach(m=>m.onclick=()=>{const k=m.dataset.menu;drawMenu(false);
     if(k==='help')dialog('How to play',rulesHTML());
     else if(k==='stats')dialog('My stats',`<p class="hint">Your daily games, kept on this device.</p>${statsHTML()}`);
-    else if(k==='credits')dialog('Credits &amp; data sources',typeof creditsHTML==='function'?creditsHTML():`<p>The countries, flags, categories and figures are the same ones Countries uses, with the same sources.</p><p>The full list of sources is in Countries: <a href="../country-grid/">open Countries</a> and tap <b>Menu → Credits &amp; data sources</b>.</p><p>Fonts: Fredoka and Nunito (Google Fonts, SIL Open Font License).</p>`);
+    else if(k==='credits')dialog('Credits &amp; data sources',typeof creditsHTML==='function'?creditsHTML():`<p>The countries, flags, categories and figures are the same ones Countries uses, with the same sources.</p><p>The full list of sources is in Countries: <a href="../country-grid/">open Countries</a> and tap <b>Menu → Credits &amp; data sources</b>.</p><p>Fonts: Archivo, Public Sans and Courier Prime (Google Fonts, SIL Open Font License).</p>`);
     else if(k==='games')location.href=Geomingo.HOME})}
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#menu,#brand');if(!t)return;
   if(t.id==='menu')drawMenu(!document.querySelector('#menulayer .menubox'));else if(typeof goHome==='function')goHome()});

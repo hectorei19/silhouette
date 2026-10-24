@@ -6,7 +6,7 @@
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
 <title>Silhouette · Geomingo</title>
 <meta name="description" content="Name the country from its shape. Nine new shapes every day, at three levels. Daily geography games from Geomingo.">
-<meta name="theme-color" content="#FFF6EE">
+<meta name="theme-color" content="#F6F8F5">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Geomingo">
 <meta property="og:title" content="Silhouette · Geomingo">
@@ -16,14 +16,14 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="../geo-games/brand/icons/favicon.svg?v=202610230100" type="image/svg+xml">
-<link rel="icon" href="../geo-games/brand/icons/favicon-32.png?v=202610230100" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="../geo-games/brand/icons/apple-touch-icon.png?v=202610230100">
-<script src="../geo-games/brand/mingo.js?v=202610230100"></script>
+<link rel="icon" href="../geo-games/brand/icons/favicon.svg?v=202610240100" type="image/svg+xml">
+<link rel="icon" href="../geo-games/brand/icons/favicon-32.png?v=202610240100" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../geo-games/brand/icons/apple-touch-icon.png?v=202610240100">
+<script src="../geo-games/brand/mingo.js?v=202610240100"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=202610230200">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,600;62..125,800;62..125,900&family=Public+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css?v=202610240100">
 <style>
 /* Silhouette: one big shape in a square frame, the answer box under it; the daily nine as a 3 x 3 board of small frames */
 .silbox{position:relative;width:100%;max-width:340px;align-self:center;aspect-ratio:1;background:var(--sheet);border:2px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:14px;
@@ -72,7 +72,7 @@
 .ready{display:flex}
 @media (prefers-reduced-motion:no-preference){.silbox.pop{animation:pop .35s cubic-bezier(.3,1.6,.6,1)}}
 </style>
-<link rel="stylesheet" href="../geo-games/brand/geomingo.css?v=202610230100">
+<link rel="stylesheet" href="../geo-games/brand/geomingo.css?v=202610240100">
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -81,8 +81,8 @@
 
 <script src="countries.js?v=202610230100"></script>
 <script src="silhouette.js?v=202610230100"></script>
-<script src="games.js?v=202610230200"></script>
-<script src="minigames.js?v=202610230200"></script>
+<script src="games.js?v=202610240100"></script>
+<script src="minigames.js?v=202610240100"></script>
 <!-- online rooms (With friends): Firebase, loaded after the page so today's board shows at once -->
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -126,8 +126,8 @@ function bindAnswer(q,onPick){const box=$('q');if(!box)return;
 // Mingo reacts to each answer in his bubble above the shape
 const triesTxt=q=>{const n=TRIES-q.tries.length;return n+' '+(n===1?'try':'tries')+' left.'};
 function feedback(q,res,code,key){
-  if(res==='right')say(key,'happy',['Yes! ','Spot on! ','Great pick! '][q.tries.length%3]+"It's "+byCode[q.c].n+'.',q.tries.length?'Got it on try '+(q.tries.length+1)+'.':'First try!');
-  else if(res==='wrong')say(key,'sad','Not quite.',`It's not ${byCode[code].n}. ${triesTxt(q)}`);
+  if(res==='right'){Geomingo.stamp('silhouette',byCode[q.c].n);say(key,'happy','Stamped: '+byCode[q.c].n+'.',q.tries.length?'Got it on try '+(q.tries.length+1)+'.':'First try.')}
+  else if(res==='wrong')say(key,'sad','Denied entry.',`It's not ${byCode[code].n}. ${triesTxt(q)}`);
   else say(key,'sad','It was '+byCode[q.c].n+'.',`Not ${byCode[code].n}. No tries left for this one.`)}
 const silKey=()=>view==='train'&&T?'train:'+T.diff:D?'sil:'+D.date+':'+D.diff:'';
 
@@ -152,7 +152,7 @@ function trainHTML(){const q=T.q,s=trainStats()[T.diff]||{best:0},done=q.st!=='p
   h+=`<div class="backline"><button class="linkbtn" id="home">← Back</button><span class="ht">Training</span></div>`;
   h+=`<div class="field">${seg('diff',[['easy','Easy'],['normal','Normal'],['hard','Hard']],T.diff)}<span class="hint">${DIFF_HINT[T.diff]}.</span></div>`;
   h+=`<div class="streak"><span><b>${T.streak}</b>in a row</span><span><b>${s.best||0}</b>best at ${DIFF_NAME[T.diff]}</span></div>`;
-  h+=moodHTML(silKey(),'hello','Whose shape is this?','Training at '+DIFF_NAME[T.diff]+'. '+triesTxt(q));
+  h+=moodHTML(silKey(),'pass','Whose shape is this?','Training at '+DIFF_NAME[T.diff]+'. '+triesTxt(q));
   h+=`<section class="panel play">${silBoxHTML(q,done)}`;
   if(done)h+=revealHTML(q)+`<button class="primary" id="tnext">Next shape</button>`;
   else h+=triesHTML(q)+answerBoxHTML(q,`<button class="ghost" id="tskip" style="align-self:flex-start">Show the answer</button>`);
@@ -195,11 +195,11 @@ function dailyPlayHTML(G){const q=G.qs[G.sel],last=G.justDone!=null?G.qs[G.justD
   return `<div class="play">${h}</div>`}
 const dailyTabs=diff=>`<div class="dtabs">${seg('ddiff',[['easy','Easy'],['normal','Normal'],['hard','Hard']].map(([v,l])=>{const g=dailyAll()[v];return [v,l+(g&&g.over?' ✓':'')]}),diff)}</div>`;
 function verdict(G){const r=rightOf(G),first=G.qs.filter(q=>q.st==='right'&&!q.tries.length).length;
-  return r===9?(first===9?{pose:'happy',t:'Nine of nine, all first try!',s:'Mingo is impressed.'}:{pose:'happy',t:'Nine of nine! Nice one.',s:first+' on the first try.'})
-    :r>=6?{pose:'happy',t:'Good board! '+r+' of 9.',s:'Tap a shape to see its name.'}:r>=3?{pose:'think',t:'Tricky shapes today. '+r+' of 9.',s:'Tap a shape to see its name.'}
-    :{pose:'sad',t:'Tough board, this one.',s:r+' of 9. Training helps!'}}
+  return r===9?(first===9?{pose:'happy',t:'Full page. Nine of nine, all first try.',s:'Nine new stamps.'}:{pose:'happy',t:'Landed. Nine of nine.',s:first+' on the first try.'})
+    :r>=6?{pose:'happy',t:'Landed. '+r+' of 9.',s:'Tap a shape to see its name.'}:r>=3?{pose:'think',t:'A few gaps in the pages. '+r+' of 9.',s:'Tap a shape to see its name.'}
+    :{pose:'sad',t:'Rough crossing, this one.',s:r+' of 9. Training helps.'}}
 function resultWindow(){const G=D,v=verdict(G);
-  return {pose:v.pose,title:v.t,num:rightOf(G)+'/9',unit:'shapes · '+DIFF_NAME[G.diff],mini:Geomingo.mini(G.qs.map(q=>q.st==='right'),3),
+  return {game:'silhouette',pose:v.pose,title:v.t,num:rightOf(G)+'/9',unit:'Shapes · '+DIFF_NAME[G.diff],mini:Geomingo.mini(G.qs.map(q=>q.st==='right'),3),
     sub:`Next board in ${nextIn()}.`,share:()=>share(dailyShare(G)),next:Geomingo.nextGame('silhouette'),allDone:true,close:'See the board'}}
 function dailyResultHTML(G){const r=rightOf(G),v=verdict(G);
   return `<section class="panel">${Geomingo.hello(v.pose,v.t,v.s,{key:'res'})}<span class="label">Silhouette #${G.num} · ${DIFF_NAME[G.diff]}</span><p class="big">${r} of 9</p>
@@ -216,7 +216,7 @@ function dailyHTML(){let h=header('Silhou<span>ette</span>','Daily #'+D.num);
   else h+=dailyMood()+`<section class="panel">${dailyPlayHTML(D)}</section>`;
   return h}
 function dailyMood(){const started=D.qs.some(q=>q.st!=='play');
-  return moodHTML(silKey(),started?'think':'hello',started?'Keep going: '+rightOf(D)+' of 9 so far.':"Ready for today's shapes?",started?'Tap any shape to jump to it.':'Nine countries, the same for everyone. '+TRIES+' tries each.')}
+  return moodHTML(silKey(),started?'think':'pass',started?'Keep going: '+rightOf(D)+' of 9 so far.':'GeoPass ready.',started?'Tap any shape to jump to it.':'Nine shapes, nine stamps to win, the same for everyone. '+TRIES+' tries each.')}
 
 /* ---- stats, rules, credits ---- */
 function statsHTML(){const h=load('sil-hist',{}),days=Object.keys(h);
@@ -244,7 +244,7 @@ function creditsHTML(){return `<ul class="helpbox" style="padding-left:18px">
   <li>Borders: <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>, from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> 1:10m (public domain). Each country is drawn on its own map centred on itself, so no shape is stretched or cut by the date line.</li>
   <li>Country names, other names and continents: Countries' data, from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL 1.0).</li>
   <li>Flags: <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener">flag-icons</a> (MIT License).</li>
-  <li>Fonts: Fredoka and Nunito (Google Fonts, SIL Open Font License).</li></ul>`}
+  <li>Fonts: Archivo, Public Sans and Courier Prime (Google Fonts, SIL Open Font License).</li></ul>`}
 
 /* ---- With friends: online rooms on Countries' Firebase Realtime Database ----
    A room lives at rooms/ABCD like Countries', marked game:'silhouette' so games never open each other's rooms.
@@ -363,7 +363,7 @@ async function onlinePick(code){if(!O||O.status!=='round'||O.q.st!=='play')retur
     if(!r.committed)return;
     const a=r.snapshot.val();res=right?'right':(a.tries||[]).length>=TRIES?'out':'wrong';
     query='';typing=res==='wrong';
-    if(res==='right')toast(`${byCode[code].n}! +${pts}`,'good');
+    if(res==='right'){Geomingo.stamp('silhouette',byCode[code].n);toast(`Stamped: ${byCode[code].n}. +${pts}`,'good')}
     else toast(`Not ${byCode[code].n}.${res==='out'?' No tries left.':` ${TRIES-a.tries.length} ${TRIES-a.tries.length===1?'try':'tries'} left.`}`,'bad');
     if(res!=='wrong')moveOn()}
   catch(e){console.error(e);toast('That answer did not go through. Check the connection.','bad')}}
