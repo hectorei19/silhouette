@@ -4,14 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
-<title>Silhouette · Geo Games</title>
+<title>Silhouette · Geomingo</title>
+<meta name="description" content="Name the country from its shape. Nine new shapes every day, at three levels. Daily geography games from Geomingo.">
+<meta name="theme-color" content="#F6F8F5">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Geomingo">
+<meta property="og:title" content="Silhouette · Geomingo">
+<meta property="og:description" content="Name the country from its shape. New shapes every day.">
+<meta property="og:url" content="https://hectorei19.github.io/silhouette/">
+<meta property="og:image" content="https://hectorei19.github.io/geo-games/brand/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../geo-games/brand/icons/favicon.svg?v=202610240100" type="image/svg+xml">
+<link rel="icon" href="../geo-games/brand/icons/favicon-32.png?v=202610240100" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="../geo-games/brand/icons/apple-touch-icon.png?v=202610240100">
+<script src="../geo-games/brand/mingo.js?v=202610240100"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=202610230100">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,600;62..125,800;62..125,900&family=Public+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css?v=202610240100">
 <style>
 /* Silhouette: one big shape in a square frame, the answer box under it; the daily nine as a 3 x 3 board of small frames */
-.silbox{position:relative;width:100%;max-width:340px;align-self:center;aspect-ratio:1;background:var(--sheet);border:1.5px solid var(--ink);border-radius:8px;box-shadow:var(--shadow);padding:14px;
+.silbox{position:relative;width:100%;max-width:340px;align-self:center;aspect-ratio:1;background:var(--sheet);border:2px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:14px;
   background-image:linear-gradient(var(--sea-soft) 1px,transparent 1px),linear-gradient(90deg,var(--sea-soft) 1px,transparent 1px);background-size:25% 25%;background-position:-1px -1px}
 .silbox .sil{width:100%;height:100%;display:block;color:var(--ink)}
 .silbox.right{border-color:var(--good)}.silbox.right .sil{color:var(--good)}
@@ -26,22 +41,22 @@
 .tries i.off{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule)}
 .tries .cnt{margin-left:auto;font-family:var(--mono);font-size:.8rem}
 .missed{margin:0;font-size:.92rem;color:var(--ink-2)}
-.reveal{display:flex;align-items:center;gap:12px;background:var(--sheet);border:1.5px solid var(--good);border-radius:6px;padding:10px 12px}
+.reveal{display:flex;align-items:center;gap:12px;background:var(--sheet);border:2px solid var(--good);border-radius:16px;padding:10px 12px}
 .reveal.wrong{border-color:var(--bad)}
 .reveal .flag{width:48px;height:36px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px var(--rule);flex:none;background:var(--rule)}
 .reveal .rn{display:flex;flex-direction:column;min-width:0}
-.reveal .rn b{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:1.5rem;line-height:1}
+.reveal .rn b{font-family:var(--display);font-weight:700;font-size:1.4rem;line-height:1.1}
 .reveal .rn small{color:var(--ink-2);font-size:.9rem}
 .reveal .rpts{margin-left:auto;font-family:var(--mono);font-size:.85rem;white-space:nowrap}
 .streak{display:flex;gap:16px;font-size:.95rem;color:var(--ink-2)}
-.streak b{font-family:var(--display);font-weight:900;font-size:1.3rem;color:var(--ink);margin-right:4px}
+.streak b{font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--ink);margin-right:4px}
 .board9~.silbox{max-width:250px}
-.board9{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;max-width:340px;align-self:center}
-.board9 button{aspect-ratio:1;background:var(--sheet);border:1.5px solid var(--rule);border-radius:6px;padding:6px;position:relative}
+.board9{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:340px;align-self:center}
+.board9 button{aspect-ratio:1;background:var(--sheet);border:2px dashed var(--line);border-radius:14px;padding:6px;position:relative}
 .board9 button .sil{width:100%;height:100%;display:block;color:var(--ink)}
-.board9 button.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--sea)}
-.board9 button.right{border-color:var(--good);background:var(--p4-soft)}.board9 button.right .sil{color:var(--good)}
-.board9 button.wrong{border-color:var(--bad);background:var(--p0-soft)}.board9 button.wrong .sil{color:var(--bad)}
+.board9 button.sel{border:2px solid var(--flamingo);box-shadow:0 0 0 3px color-mix(in srgb,var(--flamingo) 30%,transparent)}
+.board9 button.right{border-style:solid;border-color:var(--good);background:var(--p4-soft)}.board9 button.right .sil{color:var(--good)}
+.board9 button.wrong{border-style:solid;border-color:var(--bad);background:var(--p0-soft)}.board9 button.wrong .sil{color:var(--bad)}
 .board9 .n{position:absolute;top:3px;left:5px;font-family:var(--mono);font-size:.62rem;color:var(--ink-2)}
 .board9 .nm{position:absolute;left:3px;right:3px;bottom:3px;font-size:.66rem;font-weight:700;line-height:1.05;text-align:center;background:var(--sheet);border-radius:3px;padding:1px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dsq{grid-template-columns:repeat(3,1fr);width:60px}
@@ -57,16 +72,17 @@
 .ready{display:flex}
 @media (prefers-reduced-motion:no-preference){.silbox.pop{animation:pop .35s cubic-bezier(.3,1.6,.6,1)}}
 </style>
+<link rel="stylesheet" href="../geo-games/brand/geomingo.css?v=202610240100">
 </head>
 <body>
 <div class="wrap" id="app"></div>
-<footer class="foot"><a class="linkbtn" href="https://hectorei19.github.io/geo-games/">More Geo Games</a></footer>
+<footer class="foot"><a class="linkbtn" href="../geo-games/">All Geomingo games</a></footer>
 <div id="layer"></div>
 
 <script src="countries.js?v=202610230100"></script>
 <script src="silhouette.js?v=202610230100"></script>
-<script src="games.js?v=202610230100"></script>
-<script src="minigames.js?v=202610230100"></script>
+<script src="games.js?v=202610240100"></script>
+<script src="minigames.js?v=202610240100"></script>
 <!-- online rooms (With friends): Firebase, loaded after the page so today's board shows at once -->
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -107,10 +123,13 @@ function bindAnswer(q,onPick){const box=$('q');if(!box)return;
   draw();
   // the box gets the focus only once you have started, so phones do not open the keyboard on arrival
   if(query||typing)setTimeout(()=>{box.focus();box.setSelectionRange(box.value.length,box.value.length)},0)}
-function feedback(q,res,code){const n=esc(byCode[code].n);
-  if(res==='right')toast(byCode[q.c].n+'!','good');
-  else if(res==='wrong')toast(`Not ${byCode[code].n}. ${TRIES-q.tries.length} ${TRIES-q.tries.length===1?'try':'tries'} left.`,'bad');
-  else toast(`Not ${byCode[code].n}. It was ${byCode[q.c].n}.`,'bad')}
+// Mingo reacts to each answer in his bubble above the shape
+const triesTxt=q=>{const n=TRIES-q.tries.length;return n+' '+(n===1?'try':'tries')+' left.'};
+function feedback(q,res,code,key){
+  if(res==='right'){Geomingo.stamp('silhouette',byCode[q.c].n);say(key,'happy','Stamped: '+byCode[q.c].n+'.',q.tries.length?'Got it on try '+(q.tries.length+1)+'.':'First try.')}
+  else if(res==='wrong')say(key,'sad','Denied entry.',`It's not ${byCode[code].n}. ${triesTxt(q)}`);
+  else say(key,'sad','It was '+byCode[q.c].n+'.',`Not ${byCode[code].n}. No tries left for this one.`)}
+const silKey=()=>view==='train'&&T?'train:'+T.diff:D?'sil:'+D.date+':'+D.diff:'';
 
 /* ---- Training: unlimited shapes, one after another, at the level you choose ----
    Each level deals from its own shuffled deck, so no country comes back until the deck is used up. */
@@ -125,7 +144,7 @@ function trainPick(code){const q=T.q;if(q.st!=='play')return;
   const res=answer(q,code);query='';typing=res==='wrong';
   const st=trainStats(),s=st[T.diff]||{n:0,ok:0,best:0};
   if(res!=='wrong'){s.n++;if(res==='right'){s.ok++;T.streak++;s.best=Math.max(s.best,T.streak)}else T.streak=0;st[T.diff]=s;store('sil-train',st)}
-  feedback(q,res,code);render()}
+  feedback(q,res,code,silKey());render()}
 function trainSkip(){const q=T.q;if(q.st!=='play')return;q.st='wrong';T.streak=0;
   const st=trainStats(),s=st[T.diff]||{n:0,ok:0,best:0};s.n++;st[T.diff]=s;store('sil-train',st);render()}
 function trainHTML(){const q=T.q,s=trainStats()[T.diff]||{best:0},done=q.st!=='play';
@@ -133,6 +152,7 @@ function trainHTML(){const q=T.q,s=trainStats()[T.diff]||{best:0},done=q.st!=='p
   h+=`<div class="backline"><button class="linkbtn" id="home">← Back</button><span class="ht">Training</span></div>`;
   h+=`<div class="field">${seg('diff',[['easy','Easy'],['normal','Normal'],['hard','Hard']],T.diff)}<span class="hint">${DIFF_HINT[T.diff]}.</span></div>`;
   h+=`<div class="streak"><span><b>${T.streak}</b>in a row</span><span><b>${s.best||0}</b>best at ${DIFF_NAME[T.diff]}</span></div>`;
+  h+=moodHTML(silKey(),'pass','Whose shape is this?','Training at '+DIFF_NAME[T.diff]+'. '+triesTxt(q));
   h+=`<section class="panel play">${silBoxHTML(q,done)}`;
   if(done)h+=revealHTML(q)+`<button class="primary" id="tnext">Next shape</button>`;
   else h+=triesHTML(q)+answerBoxHTML(q,`<button class="ghost" id="tskip" style="align-self:flex-start">Show the answer</button>`);
@@ -158,12 +178,12 @@ function dailyPick(code){const q=D.qs[D.sel];if(!q||q.st!=='play')return;
   const res=answer(q,code);query='';typing=res==='wrong';
   if(res!=='wrong'){const next=D.qs.findIndex((x,i)=>i>D.sel&&x.st==='play'),any=D.qs.findIndex(x=>x.st==='play');
     D.justDone=D.sel;if(any<0)D.over=true;else D.sel=next>=0?next:any}
-  feedback(q,res,code);dailySave();
+  feedback(q,res,code,silKey());dailySave();
   if(D.over&&view==='home')view='daily';
   render();if(D.over)window.scrollTo(0,0)}
 const rightOf=G=>G.qs.filter(q=>q.st==='right').length;
 const sq=q=>q.st==='right'?(q.tries.length?'🟨':'🟩'):'🟥';
-function dailyShareText(G){return `Silhouette #${G.num} · ${DIFF_NAME[G.diff]} — ${rightOf(G)}/9\n${[0,3,6].map(i=>G.qs.slice(i,i+3).map(sq).join('')).join('\n')}`}
+function dailyShareText(G){return `${Geomingo.share('Silhouette')} #${G.num} · ${DIFF_NAME[G.diff]} — ${rightOf(G)}/9\n${[0,3,6].map(i=>G.qs.slice(i,i+3).map(sq).join('')).join('\n')}`}
 const dailyShare=G=>dailyShareText(G)+"\n\nPlay today's Silhouette: "+pageLink();
 function boardHTML(G){const sel=G.over?-1:G.sel;
   return `<div class="board9" role="group" aria-label="Today's nine shapes">${G.qs.map((q,i)=>{const cls=[i===sel?'sel':'',q.st==='right'?'right':q.st==='wrong'?'wrong':''].join(' ');
@@ -174,8 +194,15 @@ function dailyPlayHTML(G){const q=G.qs[G.sel],last=G.justDone!=null?G.qs[G.justD
   if(!G.over&&q){h+=`<span class="label">Shape ${G.sel+1} of 9 · ${rightOf(G)} right so far</span>`+silBoxHTML(q)+triesHTML(q)+answerBoxHTML(q)}
   return `<div class="play">${h}</div>`}
 const dailyTabs=diff=>`<div class="dtabs">${seg('ddiff',[['easy','Easy'],['normal','Normal'],['hard','Hard']].map(([v,l])=>{const g=dailyAll()[v];return [v,l+(g&&g.over?' ✓':'')]}),diff)}</div>`;
-function dailyResultHTML(G){const r=rightOf(G);
-  return `<section class="panel"><span class="label">Silhouette #${G.num} · ${DIFF_NAME[G.diff]}</span><p class="big">${r} of 9</p>
+function verdict(G){const r=rightOf(G),first=G.qs.filter(q=>q.st==='right'&&!q.tries.length).length;
+  return r===9?(first===9?{pose:'happy',t:'Full page. Nine of nine, all first try.',s:'Nine new stamps.'}:{pose:'happy',t:'Landed. Nine of nine.',s:first+' on the first try.'})
+    :r>=6?{pose:'happy',t:'Landed. '+r+' of 9.',s:'Tap a shape to see its name.'}:r>=3?{pose:'think',t:'A few gaps in the pages. '+r+' of 9.',s:'Tap a shape to see its name.'}
+    :{pose:'sad',t:'Rough crossing, this one.',s:r+' of 9. Training helps.'}}
+function resultWindow(){const G=D,v=verdict(G);
+  return {game:'silhouette',pose:v.pose,title:v.t,num:rightOf(G)+'/9',unit:'Shapes · '+DIFF_NAME[G.diff],mini:Geomingo.mini(G.qs.map(q=>q.st==='right'),3),
+    sub:`Next board in ${nextIn()}.`,share:()=>share(dailyShare(G)),next:Geomingo.nextGame('silhouette'),allDone:true,close:'See the board'}}
+function dailyResultHTML(G){const r=rightOf(G),v=verdict(G);
+  return `<section class="panel">${Geomingo.hello(v.pose,v.t,v.s,{key:'res'})}<span class="label">Silhouette #${G.num} · ${DIFF_NAME[G.diff]}</span><p class="big">${r} of 9</p>
     <p class="hint">${r===9?'Every shape named.':'Tap a shape to see its name.'} Next board in ${nextIn()}.</p>
     <pre class="sharebox" id="share">${esc(dailyShareText(G))}</pre>
     <div class="row-btns"><button class="ghost" id="copy" style="flex:1">Share</button><button class="ghost" data-go="train" style="flex:1">Training</button></div>
@@ -186,8 +213,10 @@ function openDaily(diff){if(diff)store('sil-ddiff',diff);D=dailyGame(diff||load(
 function dailyHTML(){let h=header('Silhou<span>ette</span>','Daily #'+D.num);
   h+=`<div class="backline"><button class="linkbtn" id="home">← Back</button><span class="ht">Today's shapes</span></div>`+dailyTabs(D.diff);
   if(D.over)h+=dailyResultHTML(D)+`<section class="panel play">${boardHTML(D)}</section>`;
-  else h+=`<section class="panel">${dailyPlayHTML(D)}</section>`;
+  else h+=dailyMood()+`<section class="panel">${dailyPlayHTML(D)}</section>`;
   return h}
+function dailyMood(){const started=D.qs.some(q=>q.st!=='play');
+  return moodHTML(silKey(),started?'think':'pass',started?'Keep going: '+rightOf(D)+' of 9 so far.':'GeoPass ready.',started?'Tap any shape to jump to it.':'Nine shapes, nine stamps to win, the same for everyone. '+TRIES+' tries each.')}
 
 /* ---- stats, rules, credits ---- */
 function statsHTML(){const h=load('sil-hist',{}),days=Object.keys(h);
@@ -213,12 +242,12 @@ function rulesHTML(){return `<h3>The idea</h3><ul>
   <li><b>With friends</b>: online rooms for 2 to 6 phones. The host chooses <b>Getting harder</b> (3 Easy, 4 Normal, 3 Hard) or a continent and a level. Everyone gets the same ten shapes at the same time, ${SECS} seconds each. A right answer scores 500 points plus up to 500 for speed. The ranking shows after every shape and at the end.</li></ul>`}
 function creditsHTML(){return `<ul class="helpbox" style="padding-left:18px">
   <li>Borders: <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a>, from <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> 1:10m (public domain). Each country is drawn on its own map centred on itself, so no shape is stretched or cut by the date line.</li>
-  <li>Country names, other names and continents: Country Grid's data, from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL 1.0).</li>
+  <li>Country names, other names and continents: Countries' data, from <a href="https://github.com/mledoze/countries" target="_blank" rel="noopener">mledoze/countries</a> (ODbL 1.0).</li>
   <li>Flags: <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener">flag-icons</a> (MIT License).</li>
-  <li>Fonts: Big Shoulders Display, Barlow Semi Condensed, JetBrains Mono (Google Fonts, SIL Open Font License).</li></ul>`}
+  <li>Fonts: Archivo, Public Sans and Courier Prime (Google Fonts, SIL Open Font License).</li></ul>`}
 
-/* ---- With friends: online rooms on Country Grid's Firebase Realtime Database ----
-   A room lives at rooms/ABCD like Country Grid's, marked game:'silhouette' so games never open each other's rooms.
+/* ---- With friends: online rooms on Countries' Firebase Realtime Database ----
+   A room lives at rooms/ABCD like Countries', marked game:'silhouette' so games never open each other's rooms.
    Everyone sees the same shape at the same time (the host deals all of them at the start, in qs); each round lasts
    SECS seconds and ends early once everyone has named it or used their tries. A right answer scores 500, plus up to
    500 for speed. Each phone writes only its own answer (ans/<round>/<player>); whoever is online moves the room on. */
@@ -334,7 +363,7 @@ async function onlinePick(code){if(!O||O.status!=='round'||O.q.st!=='play')retur
     if(!r.committed)return;
     const a=r.snapshot.val();res=right?'right':(a.tries||[]).length>=TRIES?'out':'wrong';
     query='';typing=res==='wrong';
-    if(res==='right')toast(`${byCode[code].n}! +${pts}`,'good');
+    if(res==='right'){Geomingo.stamp('silhouette',byCode[code].n);toast(`Stamped: ${byCode[code].n}. +${pts}`,'good')}
     else toast(`Not ${byCode[code].n}.${res==='out'?' No tries left.':` ${TRIES-a.tries.length} ${TRIES-a.tries.length===1?'try':'tries'} left.`}`,'bad');
     if(res!=='wrong')moveOn()}
   catch(e){console.error(e);toast('That answer did not go through. Check the connection.','bad')}}
@@ -440,13 +469,16 @@ function homeHTML(){const key=todayKey(),diff=load('sil-ddiff','normal');
   if(D.over){const h=load('sil-hist',{});
     daily=`<button class="hcard" id="daily"><span class="hm">Today's shapes #${D.num} · ${DIFF_NAME[D.diff]} · done</span><span class="dsum"><span class="dsq" aria-hidden="true">${D.qs.map(q=>`<i class="${q.st==='right'?(q.tries.length?'mid':'on'):'bad'}"></i>`).join('')}</span><span class="dtxt"><span class="ht">${rightOf(D)} of 9</span><span class="hs">shapes named</span></span><span class="dstats"><span><b>${streakOf(h)}</b>streak</span><span><b>${Object.keys(h).length}</b>played</span></span></span><span class="hs">Tap to see the board and share your result.</span><span class="hm">Next board in ${nextIn()}</span></button>`}
   else daily=`<div class="hcard ac play"><span class="hm">#${D.num} · ${dateLabel(key)}</span><span class="ht">Today's shapes</span><span class="hs">${D.qs.some(q=>q.st!=='play')?'You started it: keep going.':'Nine countries, the same for everyone. Tap a shape or type to start.'}</span>${dailyPlayHTML(D)}</div>`;
-  return header('Silhou<span>ette</span>','',true)+`<section class="home">${dailyTabs(D.diff)}${daily}
+  const hello=D.over?Geomingo.hello(verdict(D).pose,'Done for today: '+rightOf(D)+' of 9.','Next board in '+nextIn()+'. Try another level or Training.'):dailyMood();
+  return header('Silhou<span>ette</span>','',true)+`<section class="home">${hello}${dailyTabs(D.diff)}${daily}
     <div class="hrow"><button class="hcard" data-go="train"><span class="ht">Training</span><span class="hs">Unlimited shapes, at the level you choose.</span></button>
     <button class="hcard" data-go="friends"><span class="ht">With friends</span><span class="hs">Play online, 2 to 6 players, each on their own phone.</span></button></div></section>
     ${quickRules(' Full rules in <b>How to play</b>.')}`}
 function goHome(){if(roomCode){if(!confirm('Leave the room and go to the home screen?'))return;leaveRoom().then(()=>{view='home';render()});return}
   view='home';toastMsg=null;drawToast();query='';typing=false;render();window.scrollTo(0,0)}
 function render(){
+  // the result window opens once, when the daily board you were playing ends (on the home screen too)
+  if(D&&!roomCode)watchResult('sil:'+D.date+':'+D.diff,D.over,resultWindow);
   if(roomCode&&room)app.innerHTML=O?onlineHTML():lobbyHTML();
   else if(view==='friends')app.innerHTML=friendsHTML();
   else if(view==='train')app.innerHTML=trainHTML();
